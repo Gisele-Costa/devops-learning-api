@@ -5,7 +5,7 @@ This is a basic API to learn CI/CD and DevOps concepts
 
 import logging
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
@@ -59,7 +59,7 @@ async def health_check():
     logger.info("Health check requested")
     return HealthStatus(
         status="healthy",
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         version="0.1.0"
     )
 
@@ -102,7 +102,7 @@ async def create_item(item: ItemBase):
         title=item.title,
         description=item.description,
         completed=item.completed,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc)
     )
     
     items_db[next_id] = new_item
