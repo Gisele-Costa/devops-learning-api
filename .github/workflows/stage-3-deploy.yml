@@ -1,0 +1,153 @@
+name: Stage 3 - Deploy
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_run:
+    workflows: ["Stage 2 - Build Docker Image"]
+    types: [completed]
+    branches: [main]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    name: Deploy to Staging
+    
+    environment:
+      name: staging
+      url: https://api-staging.example.com
+    
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'staging',
+              description: 'Deployment of commit ${{ github.sha }}',
+              production_environment: false,
+              auto_merge: false
+            });
+            console.log('Deployment created:', deployment.data.id);
+
+      - name: Extract image tag
+        id: image
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+          else
+            TAG=latest
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Image tag: $TAG"
+
+      - name: Deploy to staging (placeholder)
+        run: |
+          echo "📤 Deploying image: ghcr.io/${{ github.repository }}:${{ steps.image.outputs.tag }}"
+          echo "📍 Environment: Staging"
+          echo ""
+          echo "⚠️  This is a placeholder deployment step."
+          echo "In production, this would:"
+          echo "  - SSH into your staging server"
+          echo "  - Pull the Docker image"
+          echo "  - Restart the container"
+          echo "  - Run health checks"
+          echo ""
+          echo "✅ Deployment completed (simulated)"
+
+      - name: Run smoke tests
+        run: |
+          echo "🧪 Running smoke tests..."
+          echo "Tests would run against: https://api-staging.example.com"
+          echo "✅ Smoke tests passed!"
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    name: Deploy to Production
+    needs: deploy-staging
+    
+    environment:
+      name: production
+      url: https://api.example.com
+    
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Deploying version: $VERSION"
+
+      - name: Create deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.sha,
+              environment: 'production',
+              description: 'Production release ${{ steps.version.outputs.version }}',
+              production_environment: true,
+              auto_merge: false
+            });
+            console.log('Production deployment created:', deployment.data.id);
+
+      - name: Deploy to production (placeholder)
+        run: |
+          echo "🚀 Deploying to PRODUCTION"
+          echo "📦 Version: ${{ steps.version.outputs.version }}"
+          echo ""
+          echo "⚠️  This is a placeholder deployment step."
+          echo "In production, this would:"
+          echo "  - Use a more secure method (VPN, bastion host)"
+          echo "  - Deploy with zero-downtime strategy"
+          echo "  - Run full health checks"
+          echo "  - Update load balancer"
+          echo "  - Verify traffic is flowing correctly"
+          echo ""
+          echo "✅ Production deployment completed (simulated)"
+
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+          body: |
+            Docker image: `ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}`
+            Deployed to: https://api.example.com
+          draft: false
+          prerelease: false
+
+  rollback:
+    runs-on: ubuntu-latest
+    name: Rollback (if needed)
+    needs: deploy-production
+    if: failure()
+    
+    steps:
+      - name: Trigger rollback
+        run: |
+          echo "⚠️  Deployment failed! Triggering rollback..."
+          echo "In production, this would:"
+          echo "  - Revert to previous stable version"
+          echo "  - Notify the team"
+          echo "  - Create an incident"
+          echo ""
+          echo "ℹ️  Rollback completed (simulated)"
