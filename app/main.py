@@ -4,8 +4,8 @@ This is a basic API to learn CI/CD and DevOps concepts
 """
 
 import logging
-from typing import List, Optional
 from datetime import datetime, timezone
+from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
