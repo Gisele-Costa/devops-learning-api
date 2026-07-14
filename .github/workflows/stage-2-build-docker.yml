@@ -8,6 +8,7 @@ on:
     workflows: ["Stage 1 - Lint & Test"]
     types: [completed]
     branches: [main]
+  workflow_dispatch:  # Permite rodar manualmente pelo GitHub UI
 
 jobs:
   build:
