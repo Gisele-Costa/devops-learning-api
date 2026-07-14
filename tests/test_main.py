@@ -3,7 +3,6 @@ Tests for the FastAPI application
 Tests the main endpoints and error handling
 """
 
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -34,11 +33,7 @@ class TestItems:
 
     def test_create_item(self):
         """Test creating a new item"""
-        item_data = {
-            "title": "Test Item",
-            "description": "This is a test item",
-            "completed": False
-        }
+        item_data = {"title": "Test Item", "description": "This is a test item", "completed": False}
         response = client.post("/api/items", json=item_data)
         assert response.status_code == 201
         data = response.json()
