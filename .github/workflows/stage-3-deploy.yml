@@ -8,6 +8,7 @@ on:
     workflows: ["Stage 2 - Build Docker Image"]
     types: [completed]
     branches: [main]
+  workflow_dispatch:  # Permite rodar manualmente
 
 jobs:
   deploy-staging:
@@ -18,7 +19,7 @@ jobs:
       name: staging
       url: https://api-staging.example.com
     
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
     
     steps:
       - name: Checkout code
